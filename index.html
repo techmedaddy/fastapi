@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item CRUD App</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@700&family=Pacifico&display=swap');
+        body {
+            font-family: 'Quicksand', Arial, sans-serif;
+            background: linear-gradient(135deg, #ffe0f6 0%, #ffd6e0 100%);
+            margin: 0;
+            padding: 0;
+            color: #e75480;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .hello-kitty-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            background: url('https://pngimg.com/d/hello_kitty_PNG47.png') repeat top left;
+            opacity: 0.07;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 2px 24px #ffb6d5;
+            position: relative;
+            z-index: 1;
+            border: 3px solid #ffb6d5;
+        }
+        h1 {
+            text-align: center;
+            color: #e75480;
+            font-family: 'Pacifico', cursive;
+            text-shadow: 0 0 8px #fff0f5, 0 0 16px #ffb6d5;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        .kitty-head {
+            display: block;
+            margin: 0 auto 10px auto;
+            width: 80px;
+        }
+        form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 8px;
+            font-size: 1rem;
+            font-family: 'Quicksand', Arial, sans-serif;
+        }
+        input[type="text"] {
+            flex: 1;
+            border: 2px solid #ffb6d5;
+            border-radius: 8px;
+            background: #fff0f5;
+            color: #e75480;
+            outline: none;
+            box-shadow: 0 0 4px #ffb6d5 inset;
+            transition: border 0.2s;
+        }
+        input[type="text"]:focus {
+            border: 2.5px solid #e75480;
+            box-shadow: 0 0 8px #ffb6d5;
+        }
+        button {
+            background: #ffb6d5;
+            color: #fff;
+            border: 2px solid #e75480;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 0 8px #ffb6d5;
+            transition: background 0.2s, color 0.2s;
+        }
+        button:hover {
+            background: #e75480;
+            color: #fff0f5;
+            box-shadow: 0 0 16px #e75480;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff0f5;
+            box-shadow: 0 0 8px #ffb6d5;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ffb6d5;
+            text-align: left;
+            color: #e75480;
+        }
+        th {
+            background: #ffb6d5;
+            color: #fff;
+            text-shadow: 0 0 8px #fff0f5;
+        }
+        .actions button {
+            margin-right: 5px;
+            background: #fff0f5;
+            color: #e75480;
+            border: 2px solid #ffb6d5;
+            box-shadow: 0 0 8px #ffb6d5;
+        }
+        .actions button:hover {
+            background: #e75480;
+            color: #fff0f5;
+        }
+        .edit-row input {
+            width: 90%;
+            background: #fff0f5;
+            color: #e75480;
+            border: 2px solid #ffb6d5;
+            box-shadow: 0 0 4px #ffb6d5 inset;
+        }
+        ::selection {
+            background: #ffb6d5;
+            color: #e75480;
+        }
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            background: #fff0f5;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ffb6d5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="hello-kitty-bg"></div>
+    <div class="container">
+        <img src="https://pngimg.com/d/hello_kitty_PNG47.png" alt="Hello Kitty" class="kitty-head" />
+        <h1>Hello Kitty CRUD App</h1>
+        <form id="item-form">
+            <input type="text" id="name" placeholder="Name" required />
+            <input type="text" id="description" placeholder="Description" />
+            <button type="submit">Add Item</button>
+        </form>
+        <table id="items-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Items will be rendered here -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+    const apiUrl = '/items/';
+
+        async function fetchItems() {
+            const res = await fetch(apiUrl);
+            return res.json();
+        }
+
+        async function addItem(name, description) {
+            const res = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description })
+            });
+            return res.json();
+        }
+
+        async function updateItem(id, name, description) {
+            const res = await fetch(apiUrl + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description })
+            });
+            return res.json();
+        }
+
+        async function deleteItem(id) {
+            const res = await fetch(apiUrl + id, { method: 'DELETE' });
+            return res.json();
+        }
+
+        function renderItems(items) {
+            const tbody = document.querySelector('#items-table tbody');
+            tbody.innerHTML = '';
+            Object.entries(items).forEach(([id, item]) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${id}</td>
+                    <td>${item.name}</td>
+                    <td>${item.description || ''}</td>
+                    <td class="actions">
+                        <button onclick="editItem(${id}, '${item.name.replace(/'/g, "&#39;")}', '${(item.description || '').replace(/'/g, "&#39;")}')">Edit</button>
+                        <button onclick="removeItem(${id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function refresh() {
+            const items = await fetchItems();
+            renderItems(items);
+        }
+
+        document.getElementById('item-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const description = document.getElementById('description').value.trim();
+            if (!name) return;
+            await addItem(name, description);
+            this.reset();
+            refresh();
+        });
+
+        window.editItem = function(id, name, description) {
+            const tr = [...document.querySelectorAll('#items-table tbody tr')].find(row => row.firstChild.textContent == id);
+            if (!tr) return;
+            tr.classList.add('edit-row');
+            tr.innerHTML = `
+                <td>${id}</td>
+                <td><input type="text" id="edit-name-${id}" value="${name}" /></td>
+                <td><input type="text" id="edit-desc-${id}" value="${description}" /></td>
+                <td class="actions">
+                    <button onclick="saveEdit(${id})">Save</button>
+                    <button onclick="refresh()">Cancel</button>
+                </td>
+            `;
+        };
+
+        window.saveEdit = async function(id) {
+            const name = document.getElementById(`edit-name-${id}`).value.trim();
+            const description = document.getElementById(`edit-desc-${id}`).value.trim();
+            if (!name) return;
+            await updateItem(id, name, description);
+            refresh();
+        };
+
+        window.removeItem = async function(id) {
+            if (confirm('Delete this item?')) {
+                await deleteItem(id);
+                refresh();
+            }
+        };
+
+        refresh();
+    </script>
+</body>
+</html>
