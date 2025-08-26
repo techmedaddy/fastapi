@@ -113,4 +113,4 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
 # --- API root for test ---
 @app.get("/api-root", response_class=JSONResponse)
 async def api_root():
-    return {"message": "API root is working"}
+    return {"Hello": "World"}
