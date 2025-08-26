@@ -46,4 +46,4 @@ def test_update_and_delete_item():
     response = client.delete(f"/items/{item_id}")
     assert response.status_code == 200
     items = response.json()
-    assert all(i["name"] != "KittyUpdated" for i
+    assert all(i["name"] != "KittyUpdated" for i in items.values())
